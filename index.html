@@ -6,6 +6,7 @@
 <meta name="description" content="Личный план на 30 недель: тренировки дома, вес, еда">
 <title>Форма</title>
 <script id="tgs" async src="telegram-web-app.js"></script>
+<script defer src="lavka-plan.js"></script>
 <style>
 :root{
   --bg:#f2f5fb;--card:#fff;--ink:#0d1430;--mute:#5d6688;--line:#e4e8f2;
@@ -150,6 +151,15 @@ input:focus{border-color:var(--acc)}
 .tg[aria-checked=true] .sw{background:var(--acc)}
 .tg[aria-checked=true] .sw::after{transform:translateX(20px)}
 
+/* подбор из Лавки */
+.mn .hd{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:14px 0 6px}
+.mn .hd b{font-size:17px}.mn .hd span{color:var(--mute);font-size:13px;text-align:right}
+.li.it{width:100%;text-align:left}
+.li .nm{min-width:0;font-weight:600;text-align:left}
+.li .nm small{display:block;color:var(--mute);font-weight:500;font-size:13px}
+.li .pr{flex:none;font-weight:700}
+.btn:disabled{opacity:.6}
+.warn+.warn{margin-top:8px}
 /* шторка */
 .sheet{position:fixed;inset:0;background:var(--bg);transform:translateY(100%);visibility:hidden;transition:transform .42s var(--ease),visibility 0s .42s;overflow-y:auto;z-index:10}
 .sheet.open{transform:none;visibility:visible;transition:transform .42s var(--ease)}
@@ -342,12 +352,6 @@ const MEALS=[
  ['23:15','Перекус перед таблеткой',.16,'Творог 200 г и банан или кефир с яйцами'],
  ['Вечер','Сладкое: одна порция',.10,'Мороженое или шоколад']
 ];
-const SHOP=[
- ['Белок',['Яйца, 30 шт.','Курица (грудка или бёдра), 2 кг','Творог 5%, 6 пачек','Кефир, 2 л','Йогурт без сахара, 5 шт.','Рыба, филе замороженное, 700 г','Тунец в банках, 3 шт.']],
- ['Гарнир',['Гречка и рис в пакетиках','Хлеб','Овсянка']],
- ['Овощи и фрукты',['Замороженные овощи, 4 пачки','Огурцы и помидоры','Бананы, 7 шт.','Яблоки, 5 шт.']],
- ['Другое',['Орехи, 150 г','Мороженое или шоколад, 7 порций','Газировка без сахара']]
-];
 
 /* ---------- состояние: Телеграм CloudStorage + копия в браузере ---------- */
 const DAY=864e5,KEY='plan.v1';
@@ -494,9 +498,6 @@ function bodyV(){
 function foodV(){
   const kgNow=lastW()[1],T_=targets(kgNow);
   const meals=MEALS.map(m=>`<div class="li"><span>${m[0]} · ${m[1]}<small>${m[3]}</small></span><b>${Math.round(T_.kcal*m[2]/10)*10}<small>ккал</small></b></div>`).join('');
-  const week=S.budget*7;
-  const bt=week<3500?'Тесновато. Убери орехи и сладкое, бери курицу и яйца.':week<=6500?'Хватает на список ниже.':'С запасом. Можно рыбу почаще.';
-  const shop=SHOP.map(([g,items],gi)=>`<div class="grp">${g}</div>`+items.map((it,ii)=>{const id=gi*10+ii,on=S.shop.includes(id);return `<button class="chk" role="checkbox" aria-checked="${on}" data-a="shop" data-id="${id}"><span class="box">${IC.ok}</span><span class="t">${it}</span></button>`}).join('')).join('');
   return `<div class="pg"><h1>Еда</h1>
   <p class="sub">Цели на каждый день по твоему весу ${kg(kgNow)} кг. Пересчитываются, когда ты записываешь новый вес.</p>
   <div class="blk"><div class="list">
@@ -506,13 +507,12 @@ function foodV(){
    <div class="li"><span>Углеводы</span><b>${T_.c} г</b></div></div>
    <p class="hint">Это ориентир, не лечение. Если вес стоит 2 недели, убери 150 ккал (сладкое или хлеб).</p></div>
   <div class="blk"><h3>Как есть в течение дня</h3><div class="list">${meals}</div></div>
-  <div class="blk"><h3>Бюджет</h3>
-   <div class="fld"><div><label for="inb">На день, ₽</label><input id="inb" type="number" inputmode="numeric" step="50" min="0" value="${S.budget}"></div>
-   <div><label>На неделю, ₽</label><input type="text" value="${week}" disabled aria-label="На неделю"></div></div>
-   <p class="hint" id="bt">${bt} Это мой ориентир, цены в Лавке свои.</p></div>
-  <div class="blk"><h3>Список покупок на неделю</h3><div class="list" style="padding-top:0">${shop}</div>
-   <div class="two"><button class="btn soft" data-a="copy">Скопировать</button><button class="btn" data-a="lavka">Открыть Лавку</button></div>
-   <p class="hint">Подбор по тому, что сейчас есть в Лавке, и корзина делаются на компьютере в программе «Ужин из Лавки». Отсюда она недоступна, пока компьютер выключен.</p></div></div>`;
+  <div class="blk"><h3>Что купить сегодня</h3>
+   <div class="fld"><div><label for="inb">Бюджет на день, ₽</label><input id="inb" type="number" inputmode="numeric" step="50" min="0" value="${S.budget}"></div>
+   <div><label>Цель</label><input type="text" value="${T_.kcal} ккал · ${T_.p} г" disabled aria-label="Цель на день"></div></div>
+   <button class="btn" data-a="pick">Подобрать на сегодня</button>
+   <div id="lv" aria-live="polite"><p class="hint">Подбор идёт из товаров Лавки, которые я уже собрал. Они обновляются вручную, поэтому наличие и цены могут отличаться.</p></div>
+   <button class="btn line" data-a="lavka" style="margin-top:12px">Открыть Лавку</button></div></div>`;
 }
 
 /* ---------- шторки ---------- */
@@ -588,11 +588,42 @@ function render(){
   $('#act').innerHTML=actV();
   $('#tabs').innerHTML=[['plan','План',IC.plan],['body','Тело',IC.body],['food','Еда',IC.food]].map(([k,n,i])=>`<button class="tab" data-a="tab" data-k="${k}" ${V.tab===k?'aria-current="page"':''}>${i}${n}</button>`).join('');
 }
-function copyText(){
-  const t='Список покупок на неделю\n'+SHOP.map(([g,it])=>g+':\n'+it.map(x=>'- '+x).join('\n')).join('\n');
-  const done=()=>{ntf('success');const b=document.querySelector('[data-a=copy]');if(b){b.textContent='Скопировано';setTimeout(()=>{b.textContent='Скопировать'},1800)}};
-  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,fb)}else fb();
-  function fb(){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');done()}catch(e){}a.remove()}
+
+/* ---------- подбор на день из сохранённого списка Лавки ---------- */
+let LVP=null,lvSeed=0;
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const SIZE=/\s(\d+(?:[.,]\d+)?\s*(?:кг|г|мл|л))\.?$/;
+function lvLine(it,q){
+  const m=SIZE.exec(it.title),name=m?it.title.slice(0,m.index):it.title,size=m?m[1]:'';
+  if(it.bowl){
+    return `<div class="li it" style="display:block"><b class="nm">Творожная чаша</b>${it.parts.map(p=>lvLine(p,1)).join('')}</div>`;
+  }
+  return `<button class="li it" data-a="open" data-u="${esc(it.href)}" aria-label="${esc(name)}, открыть в Лавке"><span class="nm" style="color:var(--ink)">${esc(name)}<small>${esc(size)}${q>1?' × '+q:''}</small></span><span class="pr" style="color:var(--ink)">${Math.round(it.price*q)} ₽</span></button>`;
+}
+function lvHtml(ms,t){
+  const d=new Date(t*1000),age=Math.floor((Date.now()-t*1000)/864e5);
+  const head=`<p class="hint">Данные из Лавки от ${fmt(ymd(d))}${age>=2?` (${age} дн. назад)`:''}. Если чего-то нет в наличии, возьми похожее. Нажми на товар, чтобы открыть его в Лавке.</p>`;
+  if(!ms.length)return head+'<p class="warn">Подходящих наборов не нашлось. Увеличь бюджет и нажми ещё раз.</p>';
+  return head+ms.map((m,i)=>{
+    const t=m.total,G=m.goals,notes=[];
+    if(t.protein<G.protein)notes.push(`Белка ${Math.round(t.protein)} г из ${G.protein}: лучше в этом списке не нашлось.`);
+    if(t.price>G.budget)notes.push(`Выходит ${Math.round(t.price)} ₽, это дороже бюджета.`);
+    if(!m.hasDrink)notes.push('Напитка без калорий нет, возьми воду.');
+    const rows=m.lines.map(l=>lvLine(l[0],l[1])).join('');
+    return `<div class="mn"><div class="hd"><b>Вариант ${i+1}</b><span>${Math.round(t.kcal)} ккал · белок ${Math.round(t.protein)} г · ${Math.round(t.price)} ₽</span></div><div class="list">${rows}</div>${notes.map(n=>`<p class="warn">${n}</p>`).join('')}</div>`;
+  }).join('');
+}
+async function pick(){
+  const box=$('#lv'),btn=document.querySelector('[data-a=pick]');
+  btn.disabled=true;btn.textContent='Подбираю…';
+  try{
+    if(!LVP){const r=await fetch('lavka.json');if(!r.ok)throw new Error('нет файла');const raw=await r.json();LVP={raw,pool:LavkaPlan.expand(raw)}}
+    const T_=targets(lastW()[1]);
+    lvSeed=lvSeed?lvSeed+7919:Date.now()%1e9;
+    const ms=LavkaPlan.plan(LVP.pool,{kcal:T_.kcal,protein:T_.p,fat:T_.f,carbs:T_.c,budget:S.budget},lvSeed,3);
+    box.innerHTML=lvHtml(ms,LVP.raw.t);ntf('success');
+  }catch(e){box.innerHTML='<p class="warn">Не получилось загрузить список товаров. Проверь интернет и нажми ещё раз.</p>'}
+  btn.disabled=false;btn.textContent='Подобрать другие варианты';
 }
 function ask(msg,yes){
   if(TG&&TG.showConfirm&&TG.isVersionAtLeast&&TG.isVersionAtLeast('6.2')){TG.showConfirm(msg,ok=>{if(ok)yes()})}else if(confirm(msg))yes();
@@ -621,13 +652,12 @@ document.addEventListener('click',ev=>{
     S.w=S.w.filter(x=>x[0]!==d);S.w.push([d,Math.round(w*10)/10,c>=50&&c<=200?Math.round(c):(old[2]||0)]);S.w.sort((p,q)=>p[0]-q[0]);
     save();ntf('success');render();
   }
-  else if(a==='shop'){const id=+b.dataset.id;S.shop=S.shop.includes(id)?S.shop.filter(x=>x!==id):[...S.shop,id];save();b.setAttribute('aria-checked',S.shop.includes(id))}
-  else if(a==='copy'){copyText()}
-  else if(a==='lavka'){const u='https://lavka.yandex.ru';try{TG.openLink(u)}catch(e){window.open(u,'_blank','noopener')}}
+  else if(a==='pick'){pick()}
+  else if(a==='lavka'||a==='open'){const u='https://lavka.yandex.ru'+(b.dataset.u||'');try{TG.openLink(u)}catch(e){window.open(u,'_blank','noopener')}}
 });
 document.addEventListener('input',ev=>{
   const t=ev.target;
-  if(t.id==='inb'){S.budget=Math.max(0,+t.value||0);save();const wk=S.budget*7;const e=document.querySelector('.fld input[disabled]');if(e)e.value=wk;const h=$('#bt');if(h)h.textContent=(wk<3500?'Тесновато. Убери орехи и сладкое, бери курицу и яйца.':wk<=6500?'Хватает на список ниже.':'С запасом. Можно рыбу почаще.')+' Это мой ориентир, цены в Лавке свои.'}
+  if(t.id==='inb'){S.budget=Math.max(0,+t.value||0);save()}
   if(t.id==='sh'){const v=+t.value;if(v>=120&&v<=230){S.h=v;save()}}
   if(t.id==='sa'){const v=+t.value;if(v>=14&&v<=90){S.age=v;save()}}
 });
