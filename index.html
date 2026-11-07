@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Личный план на 30 недель: тренировки дома, вес, еда">
+<title>Форма</title>
+<script id="tgs" async src="telegram-web-app.js"></script>
+<style>
+:root{
+  --bg:#f2f5fb;--card:#fff;--ink:#0d1430;--mute:#5d6688;--line:#e4e8f2;
+  --acc:#2f63f6;--acc-ink:#fff;--acc-soft:#e9efff;--ok:#16895b;--ok-soft:#e3f5ec;
+  --tile:#eef2fb;--sel:#0d1430;--sel-ink:#fff;--warn:#8a5a00;--warn-soft:#fff3d6;
+  --sh:0 1px 2px rgba(13,20,48,.05),0 10px 28px rgba(13,20,48,.07);
+  --ease:cubic-bezier(.16,1,.3,1);
+  --top:calc(env(safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px) + var(--tg-safe-area-inset-top,0px) + 14px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+  --bg:#0a0e1d;--card:#131a2f;--ink:#eef1fb;--mute:#9aa4c6;--line:#232c49;
+  --acc:#7a9cff;--acc-ink:#0a0e1d;--acc-soft:#1c2750;--ok:#4ad19a;--ok-soft:#12332a;
+  --tile:#1a2340;--sel:#eef1fb;--sel-ink:#0a0e1d;--warn:#f3c969;--warn-soft:#3a2f12;
+  --sh:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.35)}}
+:root[data-theme=dark]{
+  --bg:#0a0e1d;--card:#131a2f;--ink:#eef1fb;--mute:#9aa4c6;--line:#232c49;
+  --acc:#7a9cff;--acc-ink:#0a0e1d;--acc-soft:#1c2750;--ok:#4ad19a;--ok-soft:#12332a;
+  --tile:#1a2340;--sel:#eef1fb;--sel-ink:#0a0e1d;--warn:#f3c969;--warn-soft:#3a2f12;
+  --sh:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.35)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:500 16px/1.45 Onest,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;caret-color:var(--acc)}
+::selection{background:var(--acc-soft);color:var(--ink)}
+button,input{font:inherit;color:inherit}
+button{border:0;background:none;padding:0;cursor:pointer;text-align:inherit}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:10px}
+#app{max-width:480px;margin:0 auto;padding:var(--top) 16px calc(170px + env(safe-area-inset-bottom,0px))}
+
+/* заголовок */
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+h1{margin:0;font-size:clamp(46px,15.5vw,64px);line-height:.98;font-weight:800;letter-spacing:-.04em}
+h1 b{color:var(--acc);font-weight:800}
+.ib{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:var(--mute)}
+.ib:active{background:var(--line)}
+.ib svg{width:22px;height:22px}
+.sub{margin:10px 0 0;color:var(--mute);font-size:16px}
+.wk{display:flex;align-items:center;gap:4px;margin-top:6px}
+.wk .ib{width:36px;height:36px}
+.wk .ib[disabled]{opacity:.3}
+
+/* полоса недель */
+.seg{display:flex;gap:2px;margin:16px 0 18px}
+.seg i{flex:1;height:5px;border-radius:3px;background:var(--line)}
+.seg i.d{background:var(--acc)}
+.seg i.c{background:linear-gradient(90deg,var(--acc) 50%,var(--line) 50%)}
+.seg i.gap{margin-left:5px}
+
+/* чипы дней */
+.chips{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:14px}
+.chip{background:var(--card);border-radius:16px;padding:8px 0 9px;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:78px;position:relative;box-shadow:0 1px 0 var(--line)}
+.chip .wd{font-size:12px;color:var(--mute);font-weight:600}
+.chip .dn{font-size:20px;font-weight:700;letter-spacing:-.02em}
+.chip .mk{font-size:12px;font-weight:700;color:var(--acc);height:16px;display:grid;place-items:center}
+.chip .mk svg{width:14px;height:14px;color:var(--ok)}
+.chip .mk.r{color:var(--mute);font-weight:600}
+.chip.today::after{content:"";position:absolute;top:6px;right:7px;width:6px;height:6px;border-radius:50%;background:var(--acc)}
+.chip.sel{background:var(--sel);color:var(--sel-ink);box-shadow:none}
+.chip.sel .wd{color:var(--sel-ink);opacity:.7}
+.chip.sel .mk{color:var(--sel-ink)}
+.chip.sel .mk svg{color:var(--sel-ink)}
+.chip.sel.today::after{background:var(--sel-ink)}
+
+/* карточка дня */
+.card{background:var(--card);border-radius:28px;padding:20px 18px 8px;box-shadow:var(--sh)}
+.dh{display:flex;align-items:center;gap:12px}
+.big{font-size:56px;font-weight:800;line-height:1;color:var(--acc);letter-spacing:-.04em;min-width:44px}
+.dh h2{margin:0;font-size:22px;line-height:1.15;letter-spacing:-.02em;font-weight:700}
+.meta{margin-top:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pill{font-size:12px;font-weight:700;letter-spacing:.02em;background:var(--acc-soft);color:var(--acc);padding:3px 10px;border-radius:99px}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.dh .min{margin-left:auto;color:var(--mute);font-size:14px;white-space:nowrap}
+.tagline{margin:12px 0 0;color:var(--mute);font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.note{margin:6px 0 10px;color:var(--mute)}
+.rows{margin:6px 0 0;padding:0;list-style:none}
+.row{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid var(--line);width:100%}
+.row:first-child{border-top:0}
+.tile{flex:none;width:96px;height:64px;border-radius:14px;background:var(--tile);overflow:hidden}
+.rt{flex:1;min-width:0}
+.rt b{display:block;font-weight:700;font-size:17px;line-height:1.2;letter-spacing:-.01em}
+.rt span{display:block;color:var(--mute);font-size:14px;line-height:1.3;margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rx{flex:none;text-align:right;font-weight:700;font-size:17px;white-space:nowrap}
+.rx small{display:block;font-weight:500;color:var(--mute);font-size:12px}
+.rest{padding:10px 0 18px;color:var(--mute)}
+.rest strong{color:var(--ink)}
+
+/* рисунки */
+svg.f{width:100%;height:100%;display:block}
+svg.f line{stroke:var(--ink);stroke-width:var(--sw,6);stroke-linecap:round}
+svg.f .l2{stroke:var(--mute);opacity:.55}
+svg.f .st{stroke:var(--mute);stroke-width:3;opacity:.6}
+svg.f .wl{stroke:var(--mute);stroke-width:5;opacity:.45}
+svg.f .band{stroke:var(--acc);stroke-width:3.5}
+svg.f .dash{stroke:var(--acc);stroke-width:1.5;stroke-dasharray:4 4;opacity:.8}
+svg.f circle.hd{fill:var(--tile);stroke:var(--ink);stroke-width:var(--sw,6)}
+svg.f circle.pt{fill:none;stroke:var(--mute);stroke-width:3;opacity:.6}
+.tile svg.f{--sw:8}
+
+/* нижние панели */
+.act{position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom,0px));padding:12px 16px;max-width:480px;margin:0 auto;background:linear-gradient(to top,var(--bg) 70%,transparent)}
+.btn{width:100%;min-height:54px;border-radius:18px;background:var(--acc);color:var(--acc-ink);font-weight:700;font-size:17px;display:grid;place-items:center;transition:transform .2s var(--ease)}
+.btn:active{transform:scale(.98)}
+.btn.soft{background:var(--acc-soft);color:var(--acc)}
+.btn.ok{background:var(--ok-soft);color:var(--ok)}
+.btn.line{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+.link{display:block;margin:10px auto 0;color:var(--mute);font-size:14px;text-align:center;text-decoration:underline;text-underline-offset:3px}
+.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs div{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr)}
+.tab{height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:600;color:var(--mute)}
+.tab svg{width:24px;height:24px}
+.tab[aria-current=page]{color:var(--acc)}
+
+/* вкладки Тело и Еда */
+.pg h1{font-size:44px;letter-spacing:-.04em}
+.blk{margin-top:22px}
+.blk>h3{margin:0 0 8px;font-size:18px;font-weight:700;letter-spacing:-.01em}
+.list{background:var(--card);border-radius:22px;box-shadow:var(--sh);padding:4px 16px}
+.li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid var(--line)}
+.li:first-child{border-top:0}
+.li span{color:var(--mute)}
+.li b{font-weight:700;text-align:right}
+.li small{display:block;color:var(--mute);font-weight:500;font-size:13px}
+.fld{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 10px}
+.fld label{display:block;font-size:13px;color:var(--mute);font-weight:600;margin-bottom:4px}
+input[type=number],input[type=text]{width:100%;height:50px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);padding:0 14px;font-size:18px;font-weight:600;outline:none}
+input:focus{border-color:var(--acc)}
+.chart{background:var(--card);border-radius:22px;box-shadow:var(--sh);padding:12px 8px 6px}
+.chart svg{width:100%;height:auto;display:block}
+.chart text{fill:var(--mute);font-size:11px;font-family:inherit}
+.hint{color:var(--mute);font-size:14px;margin:10px 2px 0}
+.warn{background:var(--warn-soft);color:var(--warn);border-radius:16px;padding:12px 14px;font-size:14px;margin-top:12px}
+.chk{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line);width:100%}
+.chk:first-child{border-top:0}
+.box{flex:none;width:26px;height:26px;border-radius:8px;border:2px solid var(--line);display:grid;place-items:center;color:transparent}
+.box svg{width:16px;height:16px}
+.chk[aria-checked=true] .box{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.chk[aria-checked=true] .t{color:var(--mute);text-decoration:line-through}
+.grp{margin:14px 0 2px;font-size:13px;font-weight:700;color:var(--mute);letter-spacing:.04em;text-transform:uppercase}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.tg{display:flex;align-items:center;justify-content:space-between;width:100%;padding:13px 0;border-top:1px solid var(--line)}
+.sw{width:50px;height:30px;border-radius:99px;background:var(--line);position:relative;transition:background .25s var(--ease);flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .25s var(--ease);box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.tg[aria-checked=true] .sw{background:var(--acc)}
+.tg[aria-checked=true] .sw::after{transform:translateX(20px)}
+
+/* шторка */
+.sheet{position:fixed;inset:0;background:var(--bg);transform:translateY(100%);visibility:hidden;transition:transform .42s var(--ease),visibility 0s .42s;overflow-y:auto;z-index:10}
+.sheet.open{transform:none;visibility:visible;transition:transform .42s var(--ease)}
+.sb{max-width:480px;margin:0 auto;padding:var(--top) 16px calc(24px + env(safe-area-inset-bottom,0px));min-height:100%;display:flex;flex-direction:column}
+.sbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;color:var(--mute);font-weight:600}
+.bigfig{background:var(--tile);border-radius:26px;aspect-ratio:220/140;overflow:hidden;margin:8px 0 18px}
+.bigfig svg.f{--sw:5}
+.sb h2{margin:0;font-size:30px;line-height:1.1;letter-spacing:-.03em;font-weight:800}
+.cue{margin:6px 0 0;color:var(--mute);font-size:17px}
+.steps{margin:14px 0 0;padding-left:1.2em}
+.steps li{margin:6px 0}
+.bad{margin-top:14px;font-size:14px;color:var(--mute)}
+.sp{flex:1;min-height:20px}
+.psegs{display:flex;gap:4px;margin:0 0 12px}
+.psegs i{flex:1;height:5px;border-radius:3px;background:var(--line)}
+.psegs i.d{background:var(--acc)}
+.psegs i.c{background:var(--ink)}
+.cnt{font-size:72px;font-weight:800;letter-spacing:-.04em;line-height:1;text-align:center;margin:14px 0 6px}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin:8px 0}
+.bar i{display:block;height:100%;background:var(--acc);width:0;transition:width 1s linear}
+.setl{text-align:center;color:var(--mute);font-size:17px}
+.setl b{color:var(--ink)}
+.done-box{text-align:center;padding:40px 0 10px}
+.done-box .ck{width:84px;height:84px;border-radius:50%;background:var(--ok-soft);color:var(--ok);display:grid;place-items:center;margin:0 auto 18px;animation:pop .6s var(--ease)}
+.done-box .ck svg{width:44px;height:44px}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+@keyframes rise{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+.rows .row{animation:rise .5s var(--ease) backwards}
+.rows .row:nth-child(2){animation-delay:.04s}.rows .row:nth-child(3){animation-delay:.08s}
+.rows .row:nth-child(4){animation-delay:.12s}.rows .row:nth-child(5){animation-delay:.16s}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<script>
+// Телеграм держит серую заглушку, пока приложение не скажет «готово». Говорим сразу, не ждём скрипт telegram.org.
+try{var P=window.TelegramWebviewProxy;if(P){P.postEvent('web_app_ready','{}');P.postEvent('web_app_expand','{}')}}catch(e){}
+onerror=function(m,s,l){document.body.insertAdjacentHTML('afterbegin','<pre style="white-space:pre-wrap;padding:16px;color:#f55;font:14px monospace">Ошибка: '+m+' (строка '+l+')</pre>')}</script>
+<div id="boot" style="padding:48px 20px;font:600 20px -apple-system,system-ui,sans-serif;color:#7d86a8">Загрузка…</div>
+<div id="app"><div id="main"></div></div>
+<div class="act" id="act"></div>
+<nav class="tabs" aria-label="Разделы"><div id="tabs"></div></nav>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"><div class="sb" id="sb"></div></div>
+
+<script>
+let TG=window.Telegram&&Telegram.WebApp;
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const hap=(t)=>{try{TG.HapticFeedback.impactOccurred(t||'light')}catch(e){}};
+const ntf=(t)=>{try{TG.HapticFeedback.notificationOccurred(t)}catch(e){}};
+const $=s=>document.querySelector(s);
+
+/* ---------- иконки (свои, один штрих) ---------- */
+const IC={
+ gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+ left:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+ right:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>',
+ x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+ ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+ plan:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="4"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>',
+ body:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 17l5-5 4 3.5 7-8"/><path d="M15 7.5h4.5V12"/></svg>',
+ food:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a3 3 0 0 0 3 3v8M9 3v7M12 3v7a3 3 0 0 1-3 3M18 21V3c-2.5 1.5-3.5 5-3.5 8.5H18"/></svg>'
+};
+
+/* ---------- рисунки: две позы, линии плавно переходят ---------- */
+const T='4s',K='0;.15;.5;.65;1';
+const an=(at,a,b)=>RM?'':`<animate attributeName="${at}" dur="${T}" repeatCount="indefinite" keyTimes="${K}" values="${a};${a};${b};${b};${a}"/>`;
+const bone=(p,q,c,A,B)=>`<line class="${c||''}" x1="${A[p][0]}" y1="${A[p][1]}" x2="${A[q][0]}" y2="${A[q][1]}">${an('x1',A[p][0],B[p][0])}${an('y1',A[p][1],B[p][1])}${an('x2',A[q][0],B[q][0])}${an('y2',A[q][1],B[q][1])}</line>`;
+const hd=(A,B,r)=>`<circle class="hd" r="${r||9}" cx="${A.h[0]}" cy="${A.h[1]}">${an('cx',A.h[0],B.h[0])}${an('cy',A.h[1],B.h[1])}</circle>`;
+const FL='<line class="st" x1="5" y1="128" x2="215" y2="128"/>';
+const FL2='<line class="st" x1="5" y1="124" x2="215" y2="124"/>';
+const FIG={
+ squat:{bg:FL+'<line class="st" x1="36" y1="102" x2="76" y2="102"/><line class="st" x1="36" y1="102" x2="36" y2="62"/><line class="st" x1="40" y1="102" x2="40" y2="128"/><line class="st" x1="72" y1="102" x2="72" y2="128"/>',
+  A:{h:[96,23],s:[94,36],p:[92,66],k:[98,96],a:[95,126],e:[108,40],w:[122,42]},
+  B:{h:[84,56],s:[80,68],p:[68,94],k:[100,98],a:[95,126],e:[98,70],w:[112,72]},
+  b:[['s','p'],['p','k'],['k','a'],['s','e'],['e','w']]},
+ bridge:{bg:FL2,
+  A:{h:[32,114],s:[48,118],p:[98,118],k:[122,96],a:[138,118],w:[80,120]},
+  B:{h:[32,114],s:[48,118],p:[100,90],k:[130,90],a:[138,118],w:[80,120]},
+  b:[['s','p'],['p','k'],['k','a'],['s','w']]},
+ lunge:{bg:FL,
+  A:{h:[110,22],s:[110,36],p:[108,70],k:[112,98],a:[110,126],k2:[104,98],a2:[100,126],e:[124,52],w:[136,46]},
+  B:{h:[112,40],s:[110,54],p:[104,88],k:[130,92],a:[128,126],k2:[86,118],a2:[62,124],e:[124,70],w:[136,64]},
+  b:[['s','p'],['p','k'],['k','a'],['p','k2','l2'],['k2','a2','l2'],['s','e'],['e','w']]},
+ calf:{bg:FL,
+  A:{h:[106,22],s:[106,36],p:[106,70],k:[106,98],a:[104,122],t:[120,126],e:[106,56],w:[108,76]},
+  B:{h:[106,12],s:[106,26],p:[106,60],k:[106,88],a:[104,112],t:[120,126],e:[106,46],w:[108,66]},
+  b:[['s','p'],['p','k'],['k','a'],['a','t'],['s','e'],['e','w']]},
+ bird:{bg:FL2,
+  A:{h:[158,64],s:[145,72],p:[95,72],ha:[145,122],ke:[95,122],fa:[60,122],e1:[145,98],w1:[145,122],k2:[95,98],a2:[60,122]},
+  B:{h:[158,64],s:[145,72],p:[95,72],ha:[145,122],ke:[95,122],fa:[60,122],e1:[169,71],w1:[193,70],k2:[47,73],a2:[12,74]},
+  b:[['s','p'],['s','ha','l2'],['p','ke','l2'],['ke','fa','l2'],['s','e1'],['e1','w1'],['p','k2'],['k2','a2']]},
+ wall:{bg:FL+'<line class="wl" x1="168" y1="10" x2="168" y2="128"/>',
+  A:{h:[109,41],s:[100,52],p:[72,88],a:[45,126],e:[126,55],w:[168,56]},
+  B:{h:[139,51],s:[128,60],p:[86,94],a:[45,126],e:[148,78],w:[168,56]},
+  b:[['s','p'],['p','a'],['s','e'],['e','w']]},
+ prony:{bg:FL2,
+  A:{h:[154,108],s:[140,115],p:[96,117],k:[58,118],a:[20,118],e:[160,119],w:[186,120]},
+  B:{h:[154,98],s:[140,107],p:[96,117],k:[58,118],a:[20,118],e:[165,106],w:[192,100]},
+  b:[['a','k'],['k','p'],['p','s'],['s','e'],['e','w']]},
+ angel:{bg:'<rect x="0" y="0" width="220" height="140" fill="var(--tile)"/>'+FL,
+  A:{h:[110,22],n:[110,34],p:[110,86],sL:[94,40],sR:[126,40],fL:[100,126],fR:[120,126],eL:[70,58],hL:[66,32],eR:[150,58],hR:[154,32]},
+  B:{h:[110,22],n:[110,34],p:[110,86],sL:[94,40],sR:[126,40],fL:[100,126],fR:[120,126],eL:[82,22],hL:[70,6],eR:[138,22],hR:[150,6]},
+  b:[['n','p'],['sL','sR'],['sL','eL'],['eL','hL'],['sR','eR'],['eR','hR'],['p','fL'],['p','fR']]},
+ row:{bg:FL,
+  A:{h:[72,28],s:[72,44],p:[70,76],k:[72,102],a:[70,126],e:[94,47],w:[118,50]},
+  B:{h:[72,28],s:[72,44],p:[70,76],k:[72,102],a:[70,126],e:[55,58],w:[86,58]},
+  b:[['s','p'],['p','k'],['k','a'],['s','e'],['e','w']]},
+ rowband:{bg:FL+'<circle class="pt" cx="190" cy="52" r="6"/><line class="st" x1="190" y1="10" x2="190" y2="128"/>',
+  A:{h:[72,28],s:[72,44],p:[70,76],k:[72,102],a:[70,126],e:[94,47],w:[118,50],c:[190,52]},
+  B:{h:[72,28],s:[72,44],p:[70,76],k:[72,102],a:[70,126],e:[55,58],w:[86,58],c:[190,52]},
+  b:[['s','p'],['p','k'],['k','a'],['s','e'],['e','w'],['w','c','band']]},
+ pull:{bg:FL,
+  A:{h:[110,20],n:[110,34],p:[110,82],sL:[94,38],sR:[126,38],fL:[100,126],fR:[120,126],eL:[102,42],hL:[107,46],eR:[118,42],hR:[113,46]},
+  B:{h:[110,20],n:[110,34],p:[110,82],sL:[94,38],sR:[126,38],fL:[100,126],fR:[120,126],eL:[74,40],hL:[54,40],eR:[146,40],hR:[166,40]},
+  b:[['n','p'],['sL','sR'],['sL','eL'],['eL','hL'],['sR','eR'],['eR','hR'],['p','fL'],['p','fR'],['hL','hR','band']]},
+ chin:{bg:'<line class="dash" x1="95" y1="8" x2="95" y2="136"/>',r:17,
+  A:{h:[118,52],s:[95,95],c:[95,138],n1:[136,52],n2:[142,57]},
+  B:{h:[98,50],s:[95,95],c:[95,138],n1:[116,50],n2:[122,55]},
+  b:[['s','c'],['s','h'],['n1','n2']]},
+ plank:{bg:FL2,
+  A:{h:[141,81],s:[126,86],p:[73,103],a:[20,120],e:[128,112],w:[152,116]},
+  B:{h:[141,79],s:[126,84],p:[73,99],a:[20,120],e:[128,112],w:[152,116]},
+  b:[['a','p'],['p','s'],['s','e'],['e','w']]},
+ deadbug:{bg:FL2,
+  A:{h:[42,114],s:[62,118],p:[110,118],e2:[62,98],w2:[62,78],k2:[110,90],a2:[138,90],e1:[62,98],w1:[62,78],k:[110,90],a:[138,90]},
+  B:{h:[42,114],s:[62,118],p:[110,118],e2:[62,98],w2:[62,78],k2:[110,90],a2:[138,90],e1:[44,97],w1:[18,104],k:[138,106],a:[166,116]},
+  b:[['s','p'],['s','e2','l2'],['e2','w2','l2'],['p','k2','l2'],['k2','a2','l2'],['s','e1'],['e1','w1'],['p','k'],['k','a']]},
+ chest:{bg:FL+'<line class="wl" x1="146" y1="6" x2="146" y2="128"/>',
+  A:{h:[104,24],s:[104,38],p:[100,72],k:[100,100],a:[98,126],e:[140,38],w:[140,12]},
+  B:{h:[122,28],s:[120,42],p:[106,74],k:[110,102],a:[100,126],e:[140,38],w:[140,12]},
+  b:[['s','p'],['p','k'],['k','a'],['s','e'],['e','w']]}
+};
+function fig(id){
+  const f=FIG[id],A=f.A,B=f.B;
+  return `<svg class="f" viewBox="0 0 220 140" aria-hidden="true">${f.bg}${f.b.map(x=>bone(x[0],x[1],x[2],A,B)).join('')}${hd(A,B,f.r)}</svg>`;
+}
+
+/* ---------- программа ---------- */
+const WEEKS=30;
+const PH=[
+ {n:'База',a:1,b:4,note:'Учим технику. Воспаление высокое: без рывков, не гонись за темпом.'},
+ {n:'Ритм',a:5,b:10,note:'Добавляем подход. Дышим ровно, отдых 45 секунд.'},
+ {n:'Нагрузка',a:11,b:20,note:'Больше повторов. Идём к 85 кг к апрелю.'},
+ {n:'Финиш',a:21,b:30,note:'Закрепляем форму и идём к 80 кг.'}
+];
+const SCH=['A','P','B','P','C','P','R'];
+const DAYS={
+ A:{n:'Ноги и мостик',tag:'Сила · низ тела',min:25,ex:['squat','bridge','lunge','calf','bird']},
+ B:{n:'Грудь и спина',tag:'Сила · верх и осанка',min:25,ex:['wall','prony','angel','row','chin'],band:['wall','prony','angel','row','pull','chin']},
+ C:{n:'Всё тело и кор',tag:'Сила · всё тело',min:25,ex:['squat','wall','deadbug','plank','bridge']},
+ P:{n:'Осанка',tag:'Каждый день · 5 минут',min:5,ex:['chin','angel','chest']},
+ R:{n:'Отдых',tag:'Без тренировки',min:0,ex:[]}
+};
+const EX={
+ squat:{n:'Приседание на стул',cue:'Таз назад, спина прямая, колени по носкам',u:'п',rx:[[2,8],[3,10],[3,12],[3,15]],
+  how:['Ноги на ширине плеч, спина прямая','Таз назад, как будто садишься на стул','Коснись стула и встань','Колени смотрят туда же, куда носки'],bad:'Колени заваливаются внутрь.'},
+ bridge:{n:'Ягодичный мостик',cue:'Сожми ягодицы, поясницу не выгибай',u:'п',rx:[[2,10],[3,12],[3,15],[3,15]],
+  how:['Лёжа на спине (на пледе), колени согнуты','Подними таз, сожми ягодицы, 1–2 секунды','Медленно опусти','Тело прямое от плеч до колен'],bad:'Поясница сильно прогибается.'},
+ lunge:{n:'Выпады назад',cue:'Шаг назад, колено почти к полу, чередуй ноги',u:'п',side:1,rx:[[2,6],[3,8],[3,10],[3,12]],
+  how:['Встань прямо, руки у груди','Шаг назад, опустись, колено почти к полу','Вернись и смени ногу','Корпус прямой'],bad:'Переднее колено уезжает за носок.'},
+ calf:{n:'Подъём на носки',cue:'Медленно вверх, пауза, вниз. Держись за стену',u:'п',rx:[[2,12],[3,15],[3,18],[3,20]],
+  how:['Держись рукой за стену или стул','Медленно поднимись на носки, пауза 1 секунда','Медленно вниз'],bad:'Качаешься вперёд и назад.'},
+ bird:{n:'Птица-собака',cue:'Рука вперёд, нога назад, спина как стол',u:'п',side:1,rx:[[2,6],[3,8],[3,8],[3,10]],
+  how:['На четвереньках, спина ровная, как стол','Вытяни правую руку вперёд и левую ногу назад, держи 3 секунды','Смени сторону','Таз не качается'],bad:'Нога слишком высоко, поясница прогибается.'},
+ wall:{n:'Отжимания от стены',cue:'Тело прямое, грудь тянется к стене',u:'п',rx:[[2,8],[3,10],[3,12],[3,15]],
+  how:['Встань в шаге от стены, ладони на уровне груди','Тело прямое, как доска','Согни руки, грудь к стене, потом выпрями','Легко? Отойди на полшага'],bad:'Живот провисает или таз торчит назад.'},
+ prony:{n:'Подъём рук лёжа (Y)',cue:'Лёжа на животе, чуть подними руки и грудь',u:'п',rx:[[2,8],[3,10],[3,12],[3,12]],
+  how:['Лёжа на животе, лоб на сложенном полотенце, руки вперёд','Чуть-чуть подними руки и грудь, 2 секунды','Опустись плавно','Шею не запрокидывай'],bad:'Задираешь голову и выгибаешь поясницу.'},
+ angel:{n:'Стена-ангел',cue:'Спина и затылок у стены, руки W → Y',u:'п',rx:[[2,8],[3,10],[3,10],[3,12]],
+  how:['Спина, таз и затылок касаются стены, ноги чуть вперёд','Руки как буква W, потом медленно вверх как Y','Поясницу от стены не отрывай','Не достаёшь стены? Двигайся в удобном размере'],bad:'Поясница отходит от стены. Рывки.'},
+ row:{n:'Локти назад',cue:'Лопатки сводятся, плечи вниз',u:'п',rx:[[2,10],[3,12],[3,15],[3,15]],
+  how:['Встань прямо, руки вперёд','Тяни локти назад, лопатки сводятся','Пауза 1 секунда, обратно медленно','Плечи вниз, не к ушам'],bad:'Плечи лезут к ушам. Откидываешь корпус.',
+  band:{n:'Тяга резинки к груди',cue:'Резинка за дверь, локти назад, лопатки вместе',fig:'rowband',how:['Резинку зацепи за ручку закрытой двери на уровне груди','Лицом к двери, шаг назад, чтобы резинка натянулась','Тяни локти назад, лопатки сводятся, 1 секунда','Медленно вернись']}},
+ pull:{n:'Разведение резинки',cue:'Руки в стороны, лопатки к позвоночнику',u:'п',rx:[[2,12],[3,15],[3,15],[3,15]],
+  how:['Резинка в вытянутых руках перед грудью','Разведи руки в стороны, лопатки сводятся','Медленно обратно','Плечи вниз, шея длинная'],bad:'Задираешь плечи, выгибаешь поясницу.'},
+ chin:{n:'Подбородок назад',cue:'Как «двойной подбородок», держи 3 секунды',u:'п',rx:[[1,10],[1,10],[1,10],[1,10]],
+  how:['Сидя или стоя, взгляд вперёд','Подбородок прямо назад, как «двойной подбородок»','Держи 3 секунды, шея тянется вверх','Можно делать на работе, пока идёшь'],bad:'Голова наклоняется вниз вместо движения назад.'},
+ plank:{n:'Планка на локтях',cue:'Тело прямое, живот втянут, дыши ровно',u:'с',rx:[[2,15],[3,20],[3,30],[3,40]],
+  how:['Локти под плечами, ноги вытянуты','Тело прямое от головы до пяток','Живот втянут, дыши ровно'],bad:'Таз провисает или торчит вверх. Тяжело? Встань на колени.'},
+ deadbug:{n:'Мёртвый жук',cue:'Противоположные рука и нога, поясница прижата',u:'п',side:1,rx:[[2,6],[3,8],[3,10],[3,12]],
+  how:['Лёжа на спине, руки вверх, колени согнуты под 90°','Опусти противоположные руку и ногу','Поясница прижата к полу','Вернись и смени сторону'],bad:'Поясница отрывается от пола.'},
+ chest:{n:'Растяжка груди в двери',cue:'Предплечье на косяке, шаг вперёд, дыши',u:'с',side:1,rx:[[1,30],[1,30],[2,30],[2,30]],
+  how:['Предплечье на косяке двери, локоть на уровне плеча','Шаг вперёд, грудь мягко открывается','Держи, дыши ровно','Спину не прогибай'],bad:'Тянешь резко или через боль.'}
+};
+const FIGMAP={squat:'squat',bridge:'bridge',lunge:'lunge',calf:'calf',bird:'bird',wall:'wall',prony:'prony',angel:'angel',row:'row',pull:'pull',chin:'chin',plank:'plank',deadbug:'deadbug',chest:'chest'};
+const MEALS=[
+ ['9:15','Завтрак',.28,'Омлет из 3 яиц, хлеб, творог 150 г'],
+ ['На работе','Орехи или батончик',.08,'Съешь за минуту, если получится'],
+ ['21:40','Ужин',.38,'Курица или рыба, гарнир из пакетика, овощи'],
+ ['23:15','Перекус перед таблеткой',.16,'Творог 200 г и банан или кефир с яйцами'],
+ ['Вечер','Сладкое: одна порция',.10,'Мороженое или шоколад']
+];
+const SHOP=[
+ ['Белок',['Яйца, 30 шт.','Курица (грудка или бёдра), 2 кг','Творог 5%, 6 пачек','Кефир, 2 л','Йогурт без сахара, 5 шт.','Рыба, филе замороженное, 700 г','Тунец в банках, 3 шт.']],
+ ['Гарнир',['Гречка и рис в пакетиках','Хлеб','Овсянка']],
+ ['Овощи и фрукты',['Замороженные овощи, 4 пачки','Огурцы и помидоры','Бананы, 7 шт.','Яблоки, 5 шт.']],
+ ['Другое',['Орехи, 150 г','Мороженое или шоколад, 7 порций','Газировка без сахара']]
+];
+
+/* ---------- состояние: Телеграм CloudStorage + копия в браузере ---------- */
+const DAY=864e5,KEY='plan.v1';
+const ymd=d=>Date.UTC(d.getFullYear(),d.getMonth(),d.getDate());
+const todayU=()=>ymd(new Date());
+const MON=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const WD=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+const WDF=['понедельник','вторник','среда','четверг','пятница','суббота','воскресенье'];
+const dt=u=>new Date(u);
+const fmt=u=>dt(u).getUTCDate()+' '+MON[dt(u).getUTCMonth()];
+function nextMonday(){const u=todayU(),wd=(dt(u).getUTCDay()+6)%7;return wd===0?u:u+(7-wd)*DAY}
+const def=()=>({t:0,start:nextMonday(),bands:false,h:176,age:26,done:[],w:[[0,96.5,112,1]],shop:[],budget:1000});
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+S=Object.assign(def(),S||{});
+function save(){
+  S.t=Date.now();const j=JSON.stringify(S);
+  try{localStorage.setItem(KEY,j)}catch(e){}
+  try{TG.CloudStorage.setItem(KEY,j,()=>{})}catch(e){}
+}
+function loadCloud(){
+  try{TG.CloudStorage.getItem(KEY,(err,v)=>{
+    if(err||!v)return;
+    try{const c=JSON.parse(v);if(c.t>S.t){S=Object.assign(def(),c);render()}}catch(e){}
+  })}catch(e){}
+}
+
+const di=()=>Math.floor((todayU()-S.start)/DAY);
+const curWeek=()=>Math.min(WEEKS,Math.max(1,Math.floor(di()/7)+1));
+const phaseOf=w=>PH.find(p=>w>=p.a&&w<=p.b);
+const V={tab:'plan',week:null,day:null};
+const vw=()=>V.week==null?curWeek():V.week;
+let W=null,timer=null;
+
+function lastW(){return S.w[S.w.length-1]}
+const planned=d=>96.5-0.55*d/7;
+function targets(kg){
+  const bmr=10*kg+6.25*S.h-5*S.age+5,tdee=bmr*1.4;
+  const kcal=Math.round(Math.max(tdee-500,bmr*1.1)/10)*10;
+  const p=Math.round(1.5*kg/5)*5,f=Math.round(.8*kg/5)*5;
+  const c=Math.max(0,Math.round((kcal-p*4-f*9)/4/5)*5);
+  return{kcal,p,f,c};
+}
+const kg=n=>String(Math.round(n*10)/10).replace('.',',');
+const rxText=e=>e.sets+' × '+e.reps+(e.u==='с'?' с':'');
+
+function exList(key,week){
+  const ph=PH.indexOf(phaseOf(week));
+  const ids=(S.bands&&DAYS[key].band)?DAYS[key].band:DAYS[key].ex;
+  return ids.map(id=>{
+    let e=EX[id],f=FIGMAP[id];
+    if(S.bands&&e.band){e={...e,...e.band};f=e.fig}
+    const [s,r]=e.rx[ph];
+    return{...e,id,fig:f,sets:s,reps:r};
+  });
+}
+
+/* ---------- вкладка План ---------- */
+function planV(){
+  const w=vw(),ph=phaseOf(w),base=(w-1)*7,t=di();
+  const isCur=w===curWeek()&&t>=0&&t<WEEKS*7;
+  let dow=V.day==null?(isCur?Math.min(6,Math.max(0,t-base)):0):V.day;
+  V.day=dow;
+  const key=SCH[dow],D=DAYS[key],idx=base+dow,isDone=S.done.includes(idx);
+  const u0=S.start+base*DAY,u6=u0+6*DAY;
+  const strong=[0,1,2,3,4,5,6].filter(i=>'ABC'.includes(SCH[i]));
+  const nDone=strong.filter(i=>S.done.includes(base+i)).length;
+  const span=dt(u0).getUTCMonth()===dt(u6).getUTCMonth()?dt(u0).getUTCDate()+' – '+fmt(u6):fmt(u0)+' – '+fmt(u6);
+  const num=String(w).padStart(2,'0');
+  const seg=PH.map(p=>{let h='';for(let k=p.a;k<=p.b;k++){h+=`<i class="${k<w?'d':k===w?'c':''}${k===p.a&&p.a>1?' gap':''}"></i>`}return h}).join('');
+  const chips=SCH.map((k,i)=>{
+    const id=base+i,u=S.start+id*DAY,done=S.done.includes(id);
+    const mk=done?IC.ok:'ABC'.includes(k)?k:k==='P'?'П':'';
+    const rest=k==='R'?'<span class="mk r">вых</span>':`<span class="mk">${mk}</span>`;
+    const tod=isCur&&t===id;
+    return `<button class="chip${i===dow?' sel':''}${tod?' today':''}" data-a="day" data-i="${i}" aria-pressed="${i===dow}" aria-label="${WDF[i]}, ${fmt(u)}${k==='R'?', отдых':', '+D2(k)}${done?', сделано':''}"><span class="wd">${WD[i]}</span><span class="dn">${dt(u).getUTCDate()}</span>${rest}</button>`;
+  }).join('');
+  let card;
+  if(key==='R'){
+    card=`<div class="card"><div class="dh"><div><h2>Отдых</h2><div class="meta">${isCur&&t===idx?'<span class="pill">Сегодня</span>':''}</div></div></div>
+    <p class="rest"><strong>Сегодня только шаги.</strong> Ходи как обычно, 10–12 тысяч. Мышцы растут и жир уходит именно в дни отдыха. Ложись спать пораньше.</p></div>`;
+  }else{
+    const ex=exList(key,w);
+    const sn='ABC'.includes(key)?'ABC'.indexOf(key)+1:0;
+    const rows=ex.map(e=>`<li><button class="row" data-a="ex" data-id="${e.id}"><span class="tile">${fig(e.fig)}</span><span class="rt"><b>${e.n}</b><span>${e.cue}</span></span><span class="rx">${rxText(e)}${e.side?'<small>на сторону</small>':''}</span></button></li>`).join('');
+    card=`<div class="card"><div class="dh"><span class="big">${'ABC'.includes(key)?key:'П'}</span>
+      <div><h2>${D.n}</h2><div class="meta">${isCur&&t===idx?'<span class="pill">Сегодня</span>':''}${isDone?'<span class="pill ok">Сделано</span>':''}</div></div><span class="min">${D.min} мин</span></div>
+      <p class="tagline">${D.tag}${sn?' · №'+sn:''} · ${ph.n}</p><p class="note">${ph.note}</p><ul class="rows">${rows}</ul></div>`;
+  }
+  return `<div class="top"><div><h1>Неделя <b>${num}</b></h1></div><button class="ib" data-a="set" aria-label="Настройки">${IC.gear}</button></div>
+  <div class="wk"><button class="ib" data-a="wk" data-d="-1" aria-label="Прошлая неделя" ${w<=1?'disabled':''}>${IC.left}</button>
+  <span class="sub" style="margin:0">${span} · фаза «${ph.n}»</span>
+  <button class="ib" data-a="wk" data-d="1" aria-label="Следующая неделя" ${w>=WEEKS?'disabled':''}>${IC.right}</button></div>
+  <p class="sub" style="margin-top:2px">Силовых сделано ${nDone} из 3 · неделя ${w} из ${WEEKS}</p>
+  <div class="seg" aria-hidden="true">${seg}</div>
+  <div class="chips" role="group" aria-label="Дни недели">${chips}</div>${card}
+  ${t<0?`<p class="hint">Старт ${fmt(S.start)}. Можно посмотреть упражнения заранее.</p>`:''}`;
+}
+const D2=k=>'тренировка '+k;
+
+function actV(){
+  if(V.tab!=='plan'){return ''}
+  const w=vw(),dow=V.day,key=SCH[dow],idx=(w-1)*7+dow;
+  if(key==='R')return '';
+  if(S.done.includes(idx))return `<button class="btn ok" data-a="undo">Сделано. Снять отметку</button>`;
+  return `<button class="btn" data-a="start">${key==='P'?'Начать · 5 минут':'Начать тренировку'}</button>`;
+}
+
+/* ---------- вкладка Тело ---------- */
+function chartSVG(){
+  const W_=340,H=190,l=34,r=10,tp=10,b=22,pw=W_-l-r,ph=H-tp-b;
+  const ys=S.w.map(x=>x[1]),lo=Math.floor(Math.min(79,...ys)),hi=Math.ceil(Math.max(98,...ys));
+  const X=d=>l+Math.min(d,210)/210*pw,Y=v=>tp+(hi-v)/(hi-lo)*ph;
+  let g='';
+  [95,90,85,80].forEach(v=>{g+=`<line x1="${l}" x2="${W_-r}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${l-6}" y="${Y(v)+4}" text-anchor="end">${v}</text>`});
+  [0,10,20,30].forEach(wk=>{g+=`<text x="${X(wk*7)}" y="${H-5}" text-anchor="middle">${wk}</text>`});
+  const plan=`<line x1="${X(0)}" y1="${Y(planned(0))}" x2="${X(210)}" y2="${Y(planned(210))}" stroke="var(--acc)" stroke-width="2" stroke-dasharray="5 5" opacity=".7"/>`;
+  const pts=S.w.map(x=>X(x[0])+','+Y(x[1])).join(' ');
+  const line=S.w.length>1?`<polyline points="${pts}" fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`:'';
+  const dots=S.w.map(x=>`<circle cx="${X(x[0])}" cy="${Y(x[1])}" r="4.5" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/>`).join('');
+  return `<svg viewBox="0 0 ${W_} ${H}" role="img" aria-label="График веса: факт и план">${g}${plan}${line}${dots}</svg>`;
+}
+function bodyV(){
+  const cw=lastW(),t=Math.max(0,di()),diff=cw[1]-planned(cw[0]);
+  const d85=Math.round((96.5-85)/.55*7),d80=Math.round((96.5-80)/.55*7);
+  const dTxt=Math.abs(diff)<.3?'Идёшь точно по плану.':diff<0?`Идёшь впереди плана на ${kg(-diff)} кг.`:`Отстаёшь от плана на ${kg(diff)} кг. Это нормально: смотри на 2–3 недели вместе.`;
+  const hist=S.w.slice().reverse().slice(0,6).map(x=>`<div class="li"><span>${fmt(S.start+x[0]*DAY)}${x[3]?' · примерно':''}</span><b>${kg(x[1])} кг${x[2]?'<small>талия '+x[2]+' см</small>':''}</b></div>`).join('');
+  const prog=PH.map(p=>`<div class="li"><span>${p.n}<small>недели ${p.a}–${p.b}</small></span><b>${fmt(S.start+(p.a-1)*7*DAY)}<small>${p.b===30?'до '+fmt(S.start+(p.b*7-1)*DAY):''}</small></b></div>`).join('');
+  return `<div class="pg"><h1>Тело</h1>
+  <p class="sub">Сейчас ${kg(cw[1])} кг${cw[2]?', талия '+cw[2]+' см':''}. Цель 85 кг, потом 80.</p>
+  <div class="blk"><div class="chart">${chartSVG()}</div>
+  <p class="hint">Сплошная линия: твой вес. Пунктир: план (минус 0,55 кг в неделю). Внизу номер недели.</p>
+  <p class="hint"><strong>${dTxt}</strong> По плану 85 кг будет около ${fmt(S.start+d85*DAY)}, 80 кг около ${fmt(S.start+d80*DAY)}.</p></div>
+  <div class="blk"><h3>Записать сегодня</h3>
+   <div class="fld"><div><label for="inw">Вес, кг</label><input id="inw" type="number" inputmode="decimal" step="0.1" min="40" max="250" placeholder="${kg(cw[1])}"></div>
+   <div><label for="inc">Талия, см</label><input id="inc" type="number" inputmode="decimal" step="1" min="50" max="200" placeholder="${cw[2]||''}"></div></div>
+   <button class="btn" data-a="savew">Записать</button>
+   <p class="hint">Взвешивайся раз в неделю, утром, после туалета, до еды. Талию мерь на уровне пупка.</p></div>
+  ${hist?`<div class="blk"><h3>Записи</h3><div class="list">${hist}</div></div>`:''}
+  <div class="blk"><h3>Программа</h3><div class="list">${prog}</div></div></div>`;
+}
+
+/* ---------- вкладка Еда ---------- */
+function foodV(){
+  const kgNow=lastW()[1],T_=targets(kgNow);
+  const meals=MEALS.map(m=>`<div class="li"><span>${m[0]} · ${m[1]}<small>${m[3]}</small></span><b>${Math.round(T_.kcal*m[2]/10)*10}<small>ккал</small></b></div>`).join('');
+  const week=S.budget*7;
+  const bt=week<3500?'Тесновато. Убери орехи и сладкое, бери курицу и яйца.':week<=6500?'Хватает на список ниже.':'С запасом. Можно рыбу почаще.';
+  const shop=SHOP.map(([g,items],gi)=>`<div class="grp">${g}</div>`+items.map((it,ii)=>{const id=gi*10+ii,on=S.shop.includes(id);return `<button class="chk" role="checkbox" aria-checked="${on}" data-a="shop" data-id="${id}"><span class="box">${IC.ok}</span><span class="t">${it}</span></button>`}).join('')).join('');
+  return `<div class="pg"><h1>Еда</h1>
+  <p class="sub">Цели на каждый день по твоему весу ${kg(kgNow)} кг. Пересчитываются, когда ты записываешь новый вес.</p>
+  <div class="blk"><div class="list">
+   <div class="li"><span>Калории</span><b>${T_.kcal} ккал</b></div>
+   <div class="li"><span>Белок</span><b>${T_.p} г</b></div>
+   <div class="li"><span>Жиры</span><b>${T_.f} г</b></div>
+   <div class="li"><span>Углеводы</span><b>${T_.c} г</b></div></div>
+   <p class="hint">Это ориентир, не лечение. Если вес стоит 2 недели, убери 150 ккал (сладкое или хлеб).</p></div>
+  <div class="blk"><h3>Как есть в течение дня</h3><div class="list">${meals}</div></div>
+  <div class="blk"><h3>Бюджет</h3>
+   <div class="fld"><div><label for="inb">На день, ₽</label><input id="inb" type="number" inputmode="numeric" step="50" min="0" value="${S.budget}"></div>
+   <div><label>На неделю, ₽</label><input type="text" value="${week}" disabled aria-label="На неделю"></div></div>
+   <p class="hint" id="bt">${bt} Это мой ориентир, цены в Лавке свои.</p></div>
+  <div class="blk"><h3>Список покупок на неделю</h3><div class="list" style="padding-top:0">${shop}</div>
+   <div class="two"><button class="btn soft" data-a="copy">Скопировать</button><button class="btn" data-a="lavka">Открыть Лавку</button></div>
+   <p class="hint">Подбор по тому, что сейчас есть в Лавке, и корзина делаются на компьютере в программе «Ужин из Лавки». Отсюда она недоступна, пока компьютер выключен.</p></div></div>`;
+}
+
+/* ---------- шторки ---------- */
+function openSheet(html){$('#sb').innerHTML=html;$('#sheet').classList.add('open');$('#sheet').scrollTop=0;try{TG.BackButton.show()}catch(e){}}
+function closeSheet(){clearInterval(timer);timer=null;W=null;$('#sheet').classList.remove('open');try{TG.BackButton.hide()}catch(e){};render()}
+function exSheet(id){
+  const w=vw(),key=SCH[V.day],e=exList(key,w).find(x=>x.id===id);
+  openSheet(`<div class="sbar"><span>Упражнение</span><button class="ib" data-a="close" aria-label="Закрыть">${IC.x}</button></div>
+  <div class="bigfig">${fig(e.fig)}</div><h2>${e.n}</h2><p class="cue">${rxText(e)}${e.side?' на каждую сторону':''}</p>
+  <ol class="steps">${e.how.map(s=>`<li>${s}</li>`).join('')}</ol>
+  <p class="bad"><strong>Частая ошибка.</strong> ${e.bad||'Спеши медленно.'}</p><div class="sp"></div>
+  <p class="bad">Острая боль в спине: остановись.</p>`);
+}
+function setSheet(){
+  openSheet(`<div class="sbar"><span>Настройки</span><button class="ib" data-a="close" aria-label="Закрыть">${IC.x}</button></div>
+  <div class="list"><button class="tg" role="switch" aria-checked="${S.bands}" data-a="bands" style="border-top:0"><span>У меня есть резинки<small style="display:block;color:var(--mute);font-size:13px">Добавит тягу и разведение резинки в тренировку B</small></span><span class="sw"></span></button></div>
+  <div class="fld" style="margin-top:16px"><div><label for="sh">Рост, см</label><input id="sh" type="number" inputmode="numeric" value="${S.h}"></div><div><label for="sa">Возраст</label><input id="sa" type="number" inputmode="numeric" value="${S.age}"></div></div>
+  <p class="hint">Рост и возраст нужны только для расчёта калорий.</p>
+  <div class="warn">Это план, а не лечение. Для спины при болезни Бехтерева покажи упражнения ревматологу или инструктору ЛФК. Острая боль: остановись.</div>
+  <div class="sp"></div><button class="link" data-a="reset">Сбросить весь прогресс</button>`);
+}
+
+/* ---------- тренировка ---------- */
+const REST=45;
+function startWork(){
+  const w=vw(),key=SCH[V.day];
+  W={ex:exList(key,w),i:0,set:1,mode:'ready',left:0,idx:(w-1)*7+V.day};
+  openSheet('');workV();hap('medium');
+}
+function workV(){
+  const x=W.ex[W.i],n=W.ex.length;
+  const segs=W.ex.map((_,k)=>`<i class="${k<W.i?'d':k===W.i?'c':''}"></i>`).join('');
+  let body='';
+  if(W.mode==='done'){
+    $('#sb').innerHTML=`<div class="sbar"><span></span><button class="ib" data-a="close" aria-label="Закрыть">${IC.x}</button></div>
+    <div class="done-box"><div class="ck">${IC.ok}</div><h2>Готово</h2><p class="cue">Тренировка засчитана. Пей воду и ложись спать вовремя.</p></div><div class="sp"></div><button class="btn" data-a="close">Закрыть</button>`;return;
+  }
+  const nxt=W.set<x.sets?`Подход ${W.set+1} из ${x.sets}`:W.ex[W.i+1]?W.ex[W.i+1].n:'Конец';
+  if(W.mode==='rest'){
+    body=`<p class="setl">Отдых</p><div class="cnt" id="tm">${W.left}</div><div class="bar"><i id="bar"></i></div><p class="setl">Дальше: <b>${nxt}</b></p><div class="sp"></div><button class="btn soft" data-a="skip">Пропустить</button>`;
+  }else if(W.mode==='run'){
+    body=`<p class="setl">Подход <b>${W.set} из ${x.sets}</b></p><div class="cnt" id="tm">${W.left}</div><div class="bar"><i id="bar"></i></div><div class="sp"></div><button class="btn soft" data-a="skiphold">Закончить раньше</button>`;
+  }else{
+    const what=x.u==='с'?`${x.reps} секунд`:`${x.reps} ${x.side?'повторов на сторону':'повторов'}`;
+    body=`<p class="setl">Подход <b>${W.set} из ${x.sets}</b> · ${what}</p><p class="cue" style="text-align:center">${x.cue}</p><div class="sp"></div><button class="btn" data-a="${x.u==='с'?'hold':'setdone'}">${x.u==='с'?'Старт':'Сделал подход'}</button>`;
+  }
+  $('#sb').innerHTML=`<div class="sbar"><span>${W.i+1} из ${n}</span><button class="ib" data-a="close" aria-label="Выйти">${IC.x}</button></div><div class="psegs">${segs}</div>
+  <div class="bigfig">${fig(x.fig)}</div><h2>${x.n}</h2>${body}`;
+  if(W.mode==='rest'||W.mode==='run'){const tot=W.mode==='rest'?REST:x.reps;requestAnimationFrame(()=>{const b=$('#bar');if(b){b.style.transition='none';b.style.width=((tot-W.left)/tot*100)+'%';requestAnimationFrame(()=>{b.style.transition='';b.style.width='100%';b.style.transitionDuration=W.left+'s'})}})}
+}
+function tickStart(onEnd){
+  clearInterval(timer);
+  timer=setInterval(()=>{W.left--;const e=$('#tm');if(e)e.textContent=Math.max(0,W.left);if(W.left<=0){clearInterval(timer);timer=null;ntf('warning');onEnd()}},1000);
+}
+function afterSet(){
+  const x=W.ex[W.i];
+  if(W.set>=x.sets&&W.i>=W.ex.length-1){
+    if(!S.done.includes(W.idx))S.done.push(W.idx);
+    save();W.mode='done';ntf('success');workV();return;
+  }
+  W.mode='rest';W.left=REST;workV();tickStart(nextStep);
+}
+function nextStep(){
+  const x=W.ex[W.i];
+  if(W.set<x.sets)W.set++;else{W.i++;W.set=1}
+  W.mode='ready';workV();
+}
+
+/* ---------- общий рендер и события ---------- */
+function render(){
+  const bt=$('#boot');if(bt)bt.remove();
+  $('#main').innerHTML=V.tab==='plan'?planV():V.tab==='body'?bodyV():foodV();
+  $('#act').innerHTML=actV();
+  $('#tabs').innerHTML=[['plan','План',IC.plan],['body','Тело',IC.body],['food','Еда',IC.food]].map(([k,n,i])=>`<button class="tab" data-a="tab" data-k="${k}" ${V.tab===k?'aria-current="page"':''}>${i}${n}</button>`).join('');
+}
+function copyText(){
+  const t='Список покупок на неделю\n'+SHOP.map(([g,it])=>g+':\n'+it.map(x=>'- '+x).join('\n')).join('\n');
+  const done=()=>{ntf('success');const b=document.querySelector('[data-a=copy]');if(b){b.textContent='Скопировано';setTimeout(()=>{b.textContent='Скопировать'},1800)}};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,fb)}else fb();
+  function fb(){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');done()}catch(e){}a.remove()}
+}
+function ask(msg,yes){
+  if(TG&&TG.showConfirm&&TG.isVersionAtLeast&&TG.isVersionAtLeast('6.2')){TG.showConfirm(msg,ok=>{if(ok)yes()})}else if(confirm(msg))yes();
+}
+document.addEventListener('click',ev=>{
+  const b=ev.target.closest('[data-a]');if(!b)return;
+  const a=b.dataset.a;hap('light');
+  if(a==='tab'){V.tab=b.dataset.k;render();scrollTo(0,0)}
+  else if(a==='day'){V.day=+b.dataset.i;render()}
+  else if(a==='wk'){const w=(vw())+ +b.dataset.d;V.week=Math.min(WEEKS,Math.max(1,w));V.day=null;render()}
+  else if(a==='ex'){exSheet(b.dataset.id)}
+  else if(a==='start'){startWork()}
+  else if(a==='undo'){const w=vw(),idx=(w-1)*7+V.day;S.done=S.done.filter(x=>x!==idx);save();render()}
+  else if(a==='close'){closeSheet()}
+  else if(a==='setdone'){afterSet()}
+  else if(a==='hold'){W.mode='run';W.left=W.ex[W.i].reps;workV();tickStart(afterSet)}
+  else if(a==='skiphold'){clearInterval(timer);afterSet()}
+  else if(a==='skip'){clearInterval(timer);nextStep()}
+  else if(a==='set'){setSheet()}
+  else if(a==='bands'){S.bands=!S.bands;save();b.setAttribute('aria-checked',S.bands)}
+  else if(a==='reset'){ask('Удалить весь прогресс и записи веса?',()=>{S=def();save();closeSheet()})}
+  else if(a==='savew'){
+    const w=parseFloat($('#inw').value.replace(',','.')),c=parseFloat(($('#inc').value||'').replace(',','.'));
+    if(!(w>=40&&w<=250)){$('#inw').focus();return}
+    const d=Math.max(0,di()),old=lastW();
+    S.w=S.w.filter(x=>x[0]!==d);S.w.push([d,Math.round(w*10)/10,c>=50&&c<=200?Math.round(c):(old[2]||0)]);S.w.sort((p,q)=>p[0]-q[0]);
+    save();ntf('success');render();
+  }
+  else if(a==='shop'){const id=+b.dataset.id;S.shop=S.shop.includes(id)?S.shop.filter(x=>x!==id):[...S.shop,id];save();b.setAttribute('aria-checked',S.shop.includes(id))}
+  else if(a==='copy'){copyText()}
+  else if(a==='lavka'){const u='https://lavka.yandex.ru';try{TG.openLink(u)}catch(e){window.open(u,'_blank','noopener')}}
+});
+document.addEventListener('input',ev=>{
+  const t=ev.target;
+  if(t.id==='inb'){S.budget=Math.max(0,+t.value||0);save();const wk=S.budget*7;const e=document.querySelector('.fld input[disabled]');if(e)e.value=wk;const h=$('#bt');if(h)h.textContent=(wk<3500?'Тесновато. Убери орехи и сладкое, бери курицу и яйца.':wk<=6500?'Хватает на список ниже.':'С запасом. Можно рыбу почаще.')+' Это мой ориентир, цены в Лавке свои.'}
+  if(t.id==='sh'){const v=+t.value;if(v>=120&&v<=230){S.h=v;save()}}
+  if(t.id==='sa'){const v=+t.value;if(v>=14&&v<=90){S.age=v;save()}}
+});
+let tgDone=0;
+function initTG(){
+  if(tgDone||!(window.Telegram&&Telegram.WebApp))return;tgDone=1;TG=Telegram.WebApp;
+  try{
+    TG.ready();TG.expand();
+    if(TG.colorScheme)document.documentElement.dataset.theme=TG.colorScheme;
+    TG.onEvent('themeChanged',()=>{document.documentElement.dataset.theme=TG.colorScheme});
+    TG.BackButton.onClick(()=>closeSheet());
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+    if(bg){TG.setHeaderColor(bg);TG.setBackgroundColor(bg)}
+  }catch(e){}
+  loadCloud();
+}
+// страница рисуется сразу, Телеграм подключается, когда его скрипт загрузится
+render();initTG();
+$('#tgs').addEventListener('load',initTG);
+</script>
+</body>
+</html>
